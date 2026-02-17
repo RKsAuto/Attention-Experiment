@@ -1,0 +1,1 @@
+This is a website designed to perform an attention experiment in which we play an audio for the text pasted in the an ear and it is played reversed in the other ear and we check the the attention of the individual by asking him the questions related to what he understood from the both the audios.
