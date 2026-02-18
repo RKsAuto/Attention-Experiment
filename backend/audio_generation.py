@@ -1,11 +1,12 @@
 
-from gtts import gtts
+import os
 class gen_aud():
     def audio_generator(self, text:str):
-        aud = gtts(text)
+        os.system("say " + text)
         
-        return aud
+        return "done playing"
 
-if name == "_main_":
+if __name__ == "__main__":
     gen = gen_aud()
-    aud = gen_aud.audio_generator("I am Rish")
+    aud = gen.audio_generator("I am Rish")
+    print(aud)
