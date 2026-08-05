@@ -24,9 +24,11 @@ The `Dockerfile` bundles python plus espeak so the speech engine is there on
 the server too. `render.yaml` tells Render how to run it.
 
 1. Sign in at https://render.com with GitHub.
-2. **New → Web Service**, pick this repo, and choose the `dev` branch.
-3. Render reads `render.yaml`, so just confirm: runtime Docker, plan Free.
-4. Click **Create**. The first build takes a few minutes.
+2. **New → Blueprint**, pick this repo, and choose the `dev` branch.
+   (Blueprint is the flow that actually reads `render.yaml`. If you use
+   **New → Web Service** instead, set runtime to Docker and plan to Free
+   by hand, and point the health check at `/health`.)
+3. Click **Apply**. The first build takes a few minutes.
 
 Render gives you a URL like `https://attention-experiment.onrender.com`.
 Open `.github/workflows/keep-alive.yml` and put that URL in `SITE_URL`.
