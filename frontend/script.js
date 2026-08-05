@@ -7,20 +7,47 @@ const generateBtn = document.querySelector('button[tag="generate"]');
 
 let player = new Audio();
 
-function play(url) {
+// a little popup message at the bottom of the page
+const toast = document.createElement("div");
+toast.className = "toast";
+document.body.appendChild(toast);
+let toastTimer;
+
+function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
+}
+
+async function play(url) {
+    const response = await fetch(url + "&t=" + Date.now()); // dodge the browser cache
+    if (!response.ok) {
+        showToast((await response.json()).detail);
+        return;
+    }
     player.pause();
-    player = new Audio(url + "&t=" + Date.now()); // dodge the browser cache
+    player = new Audio(URL.createObjectURL(await response.blob()));
     player.play();
 }
 
 generateBtn.addEventListener("click", async () => {
     generateBtn.textContent = "Generating...";
-    const response = await fetch("/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: textarea.value }),
-    });
-    generateBtn.textContent = response.ok ? "Generate Audios" : "Failed, try again";
+    try {
+        const response = await fetch("/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: textarea.value }),
+        });
+        if (response.ok) {
+            showToast("Audios ready! Use L / R / B to play");
+        } else {
+            showToast((await response.json()).detail);
+        }
+    } catch {
+        showToast("Could not reach the server");
+    }
+    generateBtn.textContent = "Generate Audios";
 });
 
 document.querySelector('button[tag="L"]').addEventListener("click", () => {
