@@ -95,3 +95,22 @@ label {
     font-size: 1.2rem;
     margin-left: 20px;
 }
+
+/* 7. The Toast Popup */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #222;
+    color: #39ff14;
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+.toast.show {
+    opacity: 1;
+}
