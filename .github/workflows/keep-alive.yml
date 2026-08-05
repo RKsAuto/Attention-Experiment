@@ -1,0 +1,25 @@
+# Pings the deployed site every 10 minutes so Render's free tier never puts it
+# to sleep (it sleeps after 15 idle minutes). If the site is down the ping
+# fails, the workflow goes red and GitHub emails you — that is the monitoring.
+#
+# EDIT THE URL BELOW after Render gives you your real address.
+# Note: scheduled workflows only run from the default branch (dev), so this
+# has to be merged into dev before it starts firing.
+
+name: Keep the site awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+env:
+  SITE_URL: https://attention-experiment.onrender.com
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the health endpoint
+        # --retry rides out a cold start, which can take ~50s on the free tier
+        run: curl -fsS --max-time 90 --retry 4 --retry-delay 15 "$SITE_URL/health"
