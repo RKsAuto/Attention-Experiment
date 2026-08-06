@@ -1,3 +1,4 @@
+import mimetypes
 from pathlib import Path
 
 from fastapi import Body, FastAPI, HTTPException
@@ -5,6 +6,11 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from audio_generation import make_stereo, reverse_words, text_to_wav
+
+# Slim server images often ship without the system mime table, and then these
+# get labelled text/plain and the browser refuses to use them. Spell them out.
+mimetypes.add_type("text/css", ".css")
+mimetypes.add_type("text/javascript", ".js")
 
 BASE_DIR = Path(__file__).parent
 AUDIO_DIR = BASE_DIR / "audio"
