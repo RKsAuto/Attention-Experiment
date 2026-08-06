@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: attention-experiment
+    runtime: docker
+    plan: free
+    healthCheckPath: /health

@@ -14,6 +14,11 @@ REVERSED = AUDIO_DIR / "reversed.wav"
 app = FastAPI(title="Attention Experiment")
 
 
+@app.get("/health")
+def health():
+    return {"status": "awake"}
+
+
 @app.post("/generate")
 def generate(text: str = Body(..., embed=True)):
     text = text.strip()
