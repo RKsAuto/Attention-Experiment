@@ -15,8 +15,20 @@ Then open http://127.0.0.1:8000 in your browser and put your headphones on.
 - Tick **flip** under an ear to make that ear hear the word-reversed version
   ("I am groot" becomes "groot am I").
 
-On Linux the speech engine needs espeak once: `sudo apt install espeak-ng`.
-On macOS and Windows nothing extra is needed.
+macOS uses the built-in `say` command, so nothing extra is needed there.
+Everywhere else it speaks through espeak-ng: `sudo apt install espeak-ng` on
+Linux, or the installer from https://github.com/espeak-ng/espeak-ng on Windows.
+
+## Tuning the voice
+
+Two environment variables, so the stimulus can be adjusted without a redeploy:
+
+- `SPEECH_RATE` — words per minute, default 110. The engines sit near 200 on
+  their own, which is far too quick for a participant to shadow. Note the
+  number is a dial rather than exact wpm; 110 measures at about 111.
+- `VOICE` — an espeak-ng voice, default `en-us`. Try `en-gb-x-rp` for a softer
+  British voice, or `en-us+f3` for a female one. `espeak-ng --voices` lists
+  them all. Not used on macOS, which has its own much nicer system voices.
 
 ## Deploying (free, on Render)
 

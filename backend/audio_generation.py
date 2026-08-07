@@ -3,11 +3,14 @@ import subprocess
 import sys
 import wave
 
-# Words per minute. Both engines run near 175-200 by default, which is too
-# quick to shadow: the listener falls behind and stops tracking either ear.
-# Ordinary conversation sits around 150, and slower still is easier to follow.
-# Set the SPEECH_RATE env var to retune without touching the code.
-SPEECH_RATE = int(os.environ.get("SPEECH_RATE", 140))
+# Words per minute. Both engines run near 200 by default, which is too quick
+# to shadow: the listener falls behind and stops tracking either ear.
+SPEECH_RATE = int(os.environ.get("SPEECH_RATE", 110))
+
+# Which espeak-ng voice to speak with, on linux. Handy ones: en-us, en-gb-x-rp
+# (softer british), en-us+f3 (female), or mb-us1 if the mbrola packages are
+# installed, which sounds a good deal less buzzy than plain espeak.
+VOICE = os.environ.get("VOICE", "en-us")
 
 
 def reverse_words(text):
@@ -25,12 +28,15 @@ def text_to_wav(text, path):
             check=True,
         )
     else:
-        import pyttsx3  # offline too: espeak on linux, sapi on windows
-
-        engine = pyttsx3.init()
-        engine.setProperty("rate", SPEECH_RATE)
-        engine.save_to_file(text, path)
-        engine.runAndWait()
+        # espeak-ng directly rather than through pyttsx3: it lets us name the
+        # voice, and the text goes in on stdin so a long pasted paragraph
+        # cannot run past the command line length limit
+        subprocess.run(
+            ["espeak-ng", "--stdin", "-v", VOICE,
+             "-s", str(SPEECH_RATE), "-w", path],
+            input=text.encode(),
+            check=True,
+        )
 
 
 def read_wav(path):
