@@ -3,14 +3,19 @@ import subprocess
 import sys
 import wave
 
-# Words per minute. Both engines run near 200 by default, which is too quick
-# to shadow: the listener falls behind and stops tracking either ear.
-SPEECH_RATE = int(os.environ.get("SPEECH_RATE", 110))
+# Words per minute. The engines run near 200 on their own, which is too quick
+# to shadow: the listener falls behind and stops tracking either ear. This is a
+# dial rather than an exact figure, and each voice reads it slightly
+# differently, so 100 lands at about 114 wpm with the default voice.
+SPEECH_RATE = int(os.environ.get("SPEECH_RATE", 100))
 
-# Which espeak-ng voice to speak with, on linux. Handy ones: en-us, en-gb-x-rp
-# (softer british), en-us+f3 (female), or mb-us1 if the mbrola packages are
-# installed, which sounds a good deal less buzzy than plain espeak.
-VOICE = os.environ.get("VOICE", "en-us")
+# Which espeak-ng voice to speak with, on linux. mb-us1 is the mbrola american
+# female, which is a good deal less buzzy than plain espeak but needs the
+# mbrola packages. `espeak-ng --voices` lists the alternatives.
+VOICE = os.environ.get("VOICE", "mb-us1")
+
+# Always present, so it is what we drop back to if VOICE cannot be spoken
+FALLBACK_VOICE = "en-us"
 
 
 def reverse_words(text):
@@ -30,13 +35,18 @@ def text_to_wav(text, path):
     else:
         # espeak-ng directly rather than through pyttsx3: it lets us name the
         # voice, and the text goes in on stdin so a long pasted paragraph
-        # cannot run past the command line length limit
-        subprocess.run(
-            ["espeak-ng", "--stdin", "-v", VOICE,
-             "-s", str(SPEECH_RATE), "-w", path],
-            input=text.encode(),
-            check=True,
-        )
+        # cannot run past the command line length limit.
+        # If the mbrola packages are missing we still want working audio, so
+        # fall back to the plain voice rather than failing the request.
+        for voice in (VOICE, FALLBACK_VOICE):
+            spoken = subprocess.run(
+                ["espeak-ng", "--stdin", "-v", voice,
+                 "-s", str(SPEECH_RATE), "-w", path],
+                input=text.encode(),
+            )
+            if spoken.returncode == 0:
+                return
+        raise RuntimeError("espeak-ng could not produce any audio")
 
 
 def read_wav(path):

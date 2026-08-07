@@ -23,12 +23,20 @@ Linux, or the installer from https://github.com/espeak-ng/espeak-ng on Windows.
 
 Two environment variables, so the stimulus can be adjusted without a redeploy:
 
-- `SPEECH_RATE` — words per minute, default 110. The engines sit near 200 on
-  their own, which is far too quick for a participant to shadow. Note the
-  number is a dial rather than exact wpm; 110 measures at about 111.
-- `VOICE` — an espeak-ng voice, default `en-us`. Try `en-gb-x-rp` for a softer
-  British voice, or `en-us+f3` for a female one. `espeak-ng --voices` lists
-  them all. Not used on macOS, which has its own much nicer system voices.
+- `SPEECH_RATE` — words per minute, default 100. The engines sit near 200 on
+  their own, which is far too quick for a participant to shadow. It is a dial
+  rather than an exact figure and each voice reads it a little differently;
+  100 measures at about 114 wpm with the default voice.
+- `VOICE` — an espeak-ng voice, default `mb-us1`, the mbrola american female.
+  `espeak-ng --voices` and `espeak-ng --voices=mbrola` list the rest. Not used
+  on macOS, which speaks through its own much nicer system voices.
+
+`mb-us1` needs the `mbrola` and `mbrola-us1` packages. The Dockerfile installs
+them, switching on debian's non-free section first, because slim images ship
+with it disabled. If they are ever missing the app quietly falls back to plain
+`en-us` rather than failing, so a packaging problem costs voice quality instead
+of taking the site down. To hear it locally on Ubuntu:
+`sudo apt install mbrola mbrola-us1`.
 
 ## Deploying (free, on Render)
 
