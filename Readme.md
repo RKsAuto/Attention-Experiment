@@ -36,14 +36,29 @@ Open `.github/workflows/keep-alive.yml` and put that URL in `SITE_URL`.
 ## Keeping it awake
 
 Free services sleep after 15 idle minutes and then take ~50 seconds to wake
-up, which is a bad first impression for someone taking the test. The workflow
-in `.github/workflows/keep-alive.yml` pings `/health` every 10 minutes to stop
-that, and doubles as monitoring: if the site is down the ping fails and GitHub
-emails you about the failed run. This repo is public so those runs are free.
+up, which is a bad first impression for someone taking the test. There are two
+layers guarding against that, because neither is enough on its own.
 
-Two things worth knowing:
+**1. The app pings itself.** `keep_awake` in `main.py` requests its own public
+`/health` every 10 minutes, which counts as traffic and resets the idle timer.
+It switches on only when `RENDER_EXTERNAL_URL` exists, so running locally is
+unaffected. The catch: it can stop the app falling asleep but cannot wake it
+once it has, so after a deploy or restart during a quiet spell something else
+has to knock first.
 
-- Scheduled workflows only run from the default branch, so the file has to be
-  on `dev` before it does anything.
-- GitHub pauses scheduled workflows after 60 days without any repo activity.
-  It sends a warning email first, and one click re-enables it.
+**2. An outside pinger.** `.github/workflows/keep-alive.yml` asks GitHub to
+ping every 10 minutes, but GitHub throttles frequent scheduled workflows hard.
+Measured over one 11 hour stretch it fired 4 times, not 66, with gaps as long
+as 6 hours. Treat it as a backup, not the plan.
+
+For dependable uptime and real alerts, point a free monitor at the site:
+
+- https://uptimerobot.com (free plan, checks every 5 minutes) or
+  https://cron-job.org (free, can go as often as every minute).
+- Add a monitor for `https://<your-render-url>/health` and give it your email.
+
+That both keeps the service warm and actually tells you when it is down, which
+is the part a cron job alone was never going to do.
+
+Also worth knowing: GitHub pauses scheduled workflows after 60 days without
+repo activity. It emails a warning first, and one click re-enables it.

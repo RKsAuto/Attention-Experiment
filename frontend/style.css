@@ -5,6 +5,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center; /* Centers everything */
+    padding: 0 15px 40px; /* keeps things off the screen edges on a phone */
+    box-sizing: border-box;
 }
 
 /* 2. The Title Text */
@@ -12,6 +14,7 @@ h1 {
     color: #39ff14; /* Neon Green */
     font-size: 3rem;
     text-shadow: 2px 2px #000; /* Adds a slight shadow to pop */
+    text-align: center;
 }
 
 /* 3. The Pink Text Area */
@@ -19,7 +22,9 @@ textarea {
     background-color: #d65094; /* Dark Pink */
     border: none;
     border-radius: 10px;
-    width: 600px;
+    width: 100%;      /* shrink to fit a phone instead of overflowing */
+    max-width: 600px; /* but never grow past the original size */
+    box-sizing: border-box;
     height: 200px;
     padding: 15px;
     font-size: 1.2rem;
@@ -44,6 +49,8 @@ textarea {
     flex-direction: column;
     align-items: center;
     font-family: 'Irish Grover';
+    width: 100%;
+    max-width: 600px;
 }
 
 /* 4. The Arrangement Container */
@@ -51,6 +58,15 @@ textarea {
     display: flex;
     gap: 40px; /* Space between the L, R, B groups */
     margin-bottom: 20px;
+    flex-wrap: wrap;         /* let the groups drop to a new row if cramped */
+    justify-content: center;
+}
+
+/* keeps each button stacked neatly over its flip box */
+.control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 /* 5. Styling the Buttons (L, R, B) */
@@ -93,7 +109,23 @@ button[tag="B"] {
 label {
     color: white;
     font-size: 1.2rem;
-    margin-left: 20px;
+}
+
+/* 8. Phone-sized screens */
+@media (max-width: 600px) {
+    h1 {
+        font-size: 2.2rem;
+    }
+    textarea {
+        height: 150px;
+        margin-bottom: 20px;
+    }
+    .arrangement {
+        gap: 10px;
+    }
+    button {
+        margin: 10px;
+    }
 }
 
 /* 7. The Toast Popup */

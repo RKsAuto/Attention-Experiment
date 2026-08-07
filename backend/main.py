@@ -1,3 +1,8 @@
+import mimetypes
+import os
+import threading
+import time
+import urllib.request
 from pathlib import Path
 
 from fastapi import Body, FastAPI, HTTPException
@@ -5,6 +10,11 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from audio_generation import make_stereo, reverse_words, text_to_wav
+
+# Slim server images often ship without the system mime table, and then these
+# get labelled text/plain and the browser refuses to use them. Spell them out.
+mimetypes.add_type("text/css", ".css")
+mimetypes.add_type("text/javascript", ".js")
 
 BASE_DIR = Path(__file__).parent
 AUDIO_DIR = BASE_DIR / "audio"
@@ -57,6 +67,23 @@ def both_ears(flipL: bool = False, flipR: bool = False):
     out = AUDIO_DIR / "both.wav"
     make_stereo(pick_source(flipL), pick_source(flipR), str(out))
     return FileResponse(out, media_type="audio/wav")
+
+
+def keep_awake(url):
+    """Render sleeps a free service after 15 idle minutes, so knock on our own
+    public door every 10. Only prevents sleeping, cannot wake us back up."""
+    while True:
+        time.sleep(600)
+        try:
+            urllib.request.urlopen(url + "/health", timeout=30).close()
+        except Exception:
+            pass  # a missed ping is not worth crashing the app over
+
+
+# RENDER_EXTERNAL_URL is set by Render, so this stays off on your own machine
+SELF_URL = os.environ.get("RENDER_EXTERNAL_URL")
+if SELF_URL:
+    threading.Thread(target=keep_awake, args=(SELF_URL,), daemon=True).start()
 
 
 # serve the frontend as-is from the same server, so no CORS fuss
