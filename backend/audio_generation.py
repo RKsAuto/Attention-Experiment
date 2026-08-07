@@ -1,6 +1,13 @@
+import os
 import subprocess
 import sys
 import wave
+
+# Words per minute. Both engines run near 175-200 by default, which is too
+# quick to shadow: the listener falls behind and stops tracking either ear.
+# Ordinary conversation sits around 150, and slower still is easier to follow.
+# Set the SPEECH_RATE env var to retune without touching the code.
+SPEECH_RATE = int(os.environ.get("SPEECH_RATE", 140))
 
 
 def reverse_words(text):
@@ -12,7 +19,8 @@ def text_to_wav(text, path):
     if sys.platform == "darwin":
         # macOS ships with the `say` command, no extra install needed
         subprocess.run(
-            ["say", "-o", path, "--file-format=WAVE", "--data-format=LEI16@22050"],
+            ["say", "-r", str(SPEECH_RATE), "-o", path,
+             "--file-format=WAVE", "--data-format=LEI16@22050"],
             input=text.encode(),
             check=True,
         )
@@ -20,6 +28,7 @@ def text_to_wav(text, path):
         import pyttsx3  # offline too: espeak on linux, sapi on windows
 
         engine = pyttsx3.init()
+        engine.setProperty("rate", SPEECH_RATE)
         engine.save_to_file(text, path)
         engine.runAndWait()
 
