@@ -24,6 +24,17 @@ REVERSED = AUDIO_DIR / "reversed.wav"
 app = FastAPI(title="Attention Experiment")
 
 
+@app.middleware("http")
+async def always_fresh_frontend(request, call_next):
+    """Phones were still showing an old style.css for a while after a deploy.
+    Ask the browser to check with us each time; these files are tiny, and it
+    still gets a cheap 304 back when nothing actually changed."""
+    response = await call_next(request)
+    if not request.url.path.startswith(("/audio", "/generate")):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 @app.get("/health")
 def health():
     return {"status": "awake"}
