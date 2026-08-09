@@ -1,6 +1,6 @@
 /* 1. The Main Blue Background */
 body {
-    background-color: #0099cc; /* Deep Sky Blue */
+    background-color: #670687; 
     font-family: 'Irish Grover';
     display: flex;
     flex-direction: column;
@@ -38,10 +38,11 @@ textarea {
     width:auto;
     height:auto;
     font-family: 'Irish Grover';
-    padding-left: 50px;
-    padding-right: 50px;
+    padding-left: 60px;
+    padding-right: 60px;
     padding-bottom: 10px;
-    padding-top: 10px
+    padding-top: 10px;
+    font-size: 24px;
 
 }
 .input-group {
@@ -51,6 +52,13 @@ textarea {
     font-family: 'Irish Grover';
     width: 100%;
     max-width: 600px;
+}
+
+.input-group::placeholder {
+    color: #ffffff;
+    opacity: 0;
+    font-family: 'Irish Grover';
+    font-size: 1.2rem;
 }
 
 /* 4. The Arrangement Container */
