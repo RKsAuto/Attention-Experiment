@@ -7,7 +7,7 @@ import wave
 # to shadow: the listener falls behind and stops tracking either ear. This is a
 # dial rather than an exact figure, and each voice reads it slightly
 # differently, so 100 lands at about 114 wpm with the default voice.
-SPEECH_RATE = int(os.environ.get("SPEECH_RATE", 140))
+SPEECH_RATE = int(os.environ.get("SPEECH_RATE", 160))
 
 # Which espeak-ng voice to speak with, on linux. mb-us1 is the mbrola american
 # female, which is a good deal less buzzy than plain espeak but needs the

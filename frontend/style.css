@@ -113,6 +113,12 @@ button[tag="B"] {
     background-color: #9acd32; /* Yellow-Green */
 }
 
+/* Pause and resume */
+button[tag="P"] {
+    background-color: #8e44ad; /* Purple */
+    font-size: 1.6rem; /* the pause glyph runs large next to the letters */
+}
+
 /* 6. The Checkbox Labels */
 label {
     color: white;

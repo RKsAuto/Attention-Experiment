@@ -4,6 +4,7 @@ const textarea = document.querySelector("textarea");
 const flipL = document.querySelector('input[name="flipL"]');
 const flipR = document.querySelector('input[name="flipR"]');
 const generateBtn = document.querySelector('button[tag="generate"]');
+const pauseBtn = document.querySelector('button[tag="P"]');
 
 let player = new Audio();
 
@@ -20,6 +21,11 @@ function showToast(message) {
     toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
+// the pause button shows what pressing it will do next
+function showPauseState() {
+    pauseBtn.innerHTML = player.paused ? "&#9654;" : "&#9208;";
+}
+
 async function play(url) {
     const response = await fetch(url + "&t=" + Date.now()); // dodge the browser cache
     if (!response.ok) {
@@ -28,6 +34,10 @@ async function play(url) {
     }
     player.pause();
     player = new Audio(URL.createObjectURL(await response.blob()));
+    // let the audio itself drive the label, so it never lies
+    for (const event of ["play", "pause", "ended"]) {
+        player.addEventListener(event, showPauseState);
+    }
     player.play();
 }
 
@@ -60,4 +70,16 @@ document.querySelector('button[tag="R"]').addEventListener("click", () => {
 
 document.querySelector('button[tag="B"]').addEventListener("click", () => {
     play("/audio/both?flipL=" + flipL.checked + "&flipR=" + flipR.checked);
+});
+
+pauseBtn.addEventListener("click", () => {
+    if (!player.src) {
+        showToast("Nothing is playing yet");
+        return;
+    }
+    if (player.paused) {
+        player.play();
+    } else {
+        player.pause();
+    }
 });

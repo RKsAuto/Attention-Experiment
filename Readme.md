@@ -12,6 +12,8 @@ Then open http://127.0.0.1:8000 in your browser and put your headphones on.
 
 - Paste a paragraph and hit **Generate Audios** (the speech is made offline, no API keys needed).
 - **L** plays the left ear only, **R** the right ear only, **B** plays both together.
+- The purple button pauses whatever is playing and resumes it from the same
+  spot. Its face shows what pressing it will do next.
 - Tick **flip** under an ear to make that ear hear the word-reversed version
   ("I am groot" becomes "groot am I").
 
