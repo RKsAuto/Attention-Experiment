@@ -54,9 +54,12 @@ textarea {
     max-width: 600px;
 }
 
-.input-group::placeholder {
-    color: #ffffff;
-    opacity: 0;
+/* ::placeholder only attaches to the textarea itself, not the div around it.
+   opacity needs saying out loud too, because firefox dims placeholders by
+   default and would wash the colour out. */
+textarea::placeholder {
+    color: #ffe3f1; /* soft white, easy to read on the pink */
+    opacity: 1;
     font-family: 'Irish Grover';
     font-size: 1.2rem;
 }

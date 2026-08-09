@@ -5,6 +5,8 @@ const flipL = document.querySelector('input[name="flipL"]');
 const flipR = document.querySelector('input[name="flipR"]');
 const generateBtn = document.querySelector('button[tag="generate"]');
 const pauseBtn = document.querySelector('button[tag="P"]');
+// remember whatever the button is called, so restoring it cannot rename it
+const generateLabel = generateBtn.textContent;
 
 let player = new Audio();
 
@@ -57,7 +59,7 @@ generateBtn.addEventListener("click", async () => {
     } catch {
         showToast("Could not reach the server");
     }
-    generateBtn.textContent = "Generate Audios";
+    generateBtn.textContent = generateLabel;
 });
 
 document.querySelector('button[tag="L"]').addEventListener("click", () => {
