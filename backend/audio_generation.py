@@ -18,8 +18,24 @@ VOICE = os.environ.get("VOICE", "mb-us1")
 FALLBACK_VOICE = "en-us"
 
 
+# A little silence before the speech, because playback often clips the first
+# moment and a one syllable opening word can be lost to it
+LEAD_IN_SECONDS = 0.3
+
+
 def reverse_words(text):
     return " ".join(reversed(text.split()))
+
+
+def one_word_at_a_time(text):
+    """Put a comma between every word before speaking it.
+
+    espeak runs unstressed words together: it renders "I am groot" as one
+    blurred "aIa#m gr'u:t", and the "I" all but disappears. Commas make it
+    stress each word on its own. It also makes the forward and reversed takes
+    come out to exactly the same length, so the two ears stay in step.
+    """
+    return ", ".join(text.split())
 
 
 def current_voice():
@@ -36,6 +52,7 @@ def current_voice():
 
 def text_to_wav(text, path):
     """Speak the text into a mono wav file, fully offline."""
+    text = one_word_at_a_time(text)
     if sys.platform == "darwin":
         # macOS ships with the `say` command, no extra install needed
         subprocess.run(
@@ -87,8 +104,11 @@ def make_stereo(left_path, right_path, out_path):
         frames[i::2 * width] = left[i::width]
         frames[width + i::2 * width] = right[i::width]
 
+    # a moment of quiet up front, so the browser does not clip the first word
+    lead_in = b"\x00" * (int(params.framerate * LEAD_IN_SECONDS) * width * 2)
+
     with wave.open(out_path, "wb") as out:
         out.setnchannels(2)
         out.setsampwidth(width)
         out.setframerate(params.framerate)
-        out.writeframes(bytes(frames))
+        out.writeframes(lead_in + bytes(frames))

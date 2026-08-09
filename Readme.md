@@ -19,6 +19,20 @@ macOS uses the built-in `say` command, so nothing extra is needed there.
 Everywhere else it speaks through espeak-ng: `sudo apt install espeak-ng` on
 Linux, or the installer from https://github.com/espeak-ng/espeak-ng on Windows.
 
+## How the words are spoken
+
+Each word is separated by a comma before it reaches the speech engine. Without
+that, espeak runs unstressed words together — it says "I am groot" as a single
+blurred sound and the "I" effectively vanishes, which is fatal for a shadowing
+task. Commas make it stress every word on its own.
+
+It also keeps the two ears in step. Spoken plainly, "I am groot" and "groot am
+I" come out 261ms apart, so the ears drift; one word per comma makes both takes
+exactly the same length, and the words stay aligned the whole way through.
+
+There is a short silence at the start of every clip too, because browsers tend
+to clip the first moment of playback and a one-syllable opening word gets lost.
+
 ## Tuning the voice
 
 Two environment variables, so the stimulus can be adjusted without a redeploy:
