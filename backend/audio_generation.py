@@ -7,7 +7,7 @@ import wave
 # to shadow: the listener falls behind and stops tracking either ear. This is a
 # dial rather than an exact figure, and each voice reads it slightly
 # differently, so 100 lands at about 114 wpm with the default voice.
-SPEECH_RATE = int(os.environ.get("SPEECH_RATE", 100))
+SPEECH_RATE = int(os.environ.get("SPEECH_RATE", 140))
 
 # Which espeak-ng voice to speak with, on linux. mb-us1 is the mbrola american
 # female, which is a good deal less buzzy than plain espeak but needs the
@@ -18,9 +18,10 @@ VOICE = os.environ.get("VOICE", "mb-us1")
 FALLBACK_VOICE = "en-us"
 
 
-# A little silence before the speech, because playback often clips the first
-# moment and a one syllable opening word can be lost to it
+# A little silence at each end, because playback tends to clip the very start
+# and the very finish, and a one syllable word there is easily lost to it
 LEAD_IN_SECONDS = 0.3
+TAIL_OUT_SECONDS = 0.3
 
 
 def reverse_words(text):
@@ -71,7 +72,9 @@ def text_to_wav(text, path):
             spoken = subprocess.run(
                 ["espeak-ng", "--stdin", "-v", voice,
                  "-s", str(SPEECH_RATE), "-w", path],
-                input=text.encode(),
+                # the trailing newline matters: without it espeak cuts the
+                # last word short, which ate the "I" in "groot am I"
+                input=(text + "\n").encode(),
             )
             if spoken.returncode == 0:
                 return
@@ -104,11 +107,12 @@ def make_stereo(left_path, right_path, out_path):
         frames[i::2 * width] = left[i::width]
         frames[width + i::2 * width] = right[i::width]
 
-    # a moment of quiet up front, so the browser does not clip the first word
-    lead_in = b"\x00" * (int(params.framerate * LEAD_IN_SECONDS) * width * 2)
+    # a moment of quiet at each end, so the browser clips silence, not words
+    quiet = lambda seconds: b"\x00" * (int(params.framerate * seconds) * width * 2)
 
     with wave.open(out_path, "wb") as out:
         out.setnchannels(2)
         out.setsampwidth(width)
         out.setframerate(params.framerate)
-        out.writeframes(lead_in + bytes(frames))
+        out.writeframes(quiet(LEAD_IN_SECONDS) + bytes(frames)
+                        + quiet(TAIL_OUT_SECONDS))
