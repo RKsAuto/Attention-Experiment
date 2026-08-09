@@ -31,12 +31,13 @@ Two environment variables, so the stimulus can be adjusted without a redeploy:
   `espeak-ng --voices` and `espeak-ng --voices=mbrola` list the rest. Not used
   on macOS, which speaks through its own much nicer system voices.
 
-`mb-us1` needs the `mbrola` and `mbrola-us1` packages. The Dockerfile installs
-them, switching on debian's non-free section first, because slim images ship
-with it disabled. If they are ever missing the app quietly falls back to plain
-`en-us` rather than failing, so a packaging problem costs voice quality instead
-of taking the site down. To hear it locally on Ubuntu:
-`sudo apt install mbrola mbrola-us1`.
+`mb-us1` needs the `mbrola` and `mbrola-us1` packages, which is why the image
+is built on Ubuntu rather than a slim Python base: both live in Ubuntu's
+multiverse component, which the Dockerfile enables. If they are ever missing
+the app falls back to plain `en-us` rather than failing, so a packaging problem
+costs voice quality instead of taking the site down — and `/health` reports
+which voice is really in use, so you can tell the two apart. To hear it locally
+on Ubuntu: `sudo apt install mbrola mbrola-us1`.
 
 ## Deploying (free, on Render)
 
