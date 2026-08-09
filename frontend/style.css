@@ -118,7 +118,7 @@ button[tag="B"] {
 
 /* Pause and resume */
 button[tag="P"] {
-    background-color: #8e44ad; /* Purple */
+    background-color: #4842b9; /* Purple */
     font-size: 1.6rem; /* the pause glyph runs large next to the letters */
 }
 
