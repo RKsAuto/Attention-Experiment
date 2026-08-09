@@ -22,6 +22,18 @@ def reverse_words(text):
     return " ".join(reversed(text.split()))
 
 
+def current_voice():
+    """What we will actually speak with, which is not always what was asked
+    for: mbrola voices need extra packages that may not be installed."""
+    if sys.platform == "darwin":
+        return "macos say"
+    listed = subprocess.run(
+        ["espeak-ng", "--voices=mbrola" if VOICE.startswith("mb-") else "--voices"],
+        capture_output=True, text=True,
+    ).stdout
+    return VOICE if f" {VOICE} " in listed or f"/{VOICE}" in listed else FALLBACK_VOICE
+
+
 def text_to_wav(text, path):
     """Speak the text into a mono wav file, fully offline."""
     if sys.platform == "darwin":

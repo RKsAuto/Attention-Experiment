@@ -9,7 +9,13 @@ from fastapi import Body, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from audio_generation import make_stereo, reverse_words, text_to_wav
+from audio_generation import (
+    SPEECH_RATE,
+    current_voice,
+    make_stereo,
+    reverse_words,
+    text_to_wav,
+)
 
 # Slim server images often ship without the system mime table, and then these
 # get labelled text/plain and the browser refuses to use them. Spell them out.
@@ -37,7 +43,13 @@ async def always_fresh_frontend(request, call_next):
 
 @app.get("/health")
 def health():
-    return {"status": "awake"}
+    """Also reports the voice actually in use, so you can tell at a glance
+    whether a deploy really picked up a voice change."""
+    return {
+        "status": "awake",
+        "voice": current_voice(),
+        "rate": SPEECH_RATE,
+    }
 
 
 @app.post("/generate")
