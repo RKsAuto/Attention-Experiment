@@ -1,3 +1,2 @@
 fastapi
 uvicorn
-pyttsx3; sys_platform != "darwin"

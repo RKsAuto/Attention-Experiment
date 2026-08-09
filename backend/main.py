@@ -9,7 +9,13 @@ from fastapi import Body, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from audio_generation import make_stereo, reverse_words, text_to_wav
+from audio_generation import (
+    SPEECH_RATE,
+    current_voice,
+    make_stereo,
+    reverse_words,
+    text_to_wav,
+)
 
 # Slim server images often ship without the system mime table, and then these
 # get labelled text/plain and the browser refuses to use them. Spell them out.
@@ -24,9 +30,26 @@ REVERSED = AUDIO_DIR / "reversed.wav"
 app = FastAPI(title="Attention Experiment")
 
 
+@app.middleware("http")
+async def always_fresh_frontend(request, call_next):
+    """Phones were still showing an old style.css for a while after a deploy.
+    Ask the browser to check with us each time; these files are tiny, and it
+    still gets a cheap 304 back when nothing actually changed."""
+    response = await call_next(request)
+    if not request.url.path.startswith(("/audio", "/generate")):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
 @app.get("/health")
 def health():
-    return {"status": "awake"}
+    """Also reports the voice actually in use, so you can tell at a glance
+    whether a deploy really picked up a voice change."""
+    return {
+        "status": "awake",
+        "voice": current_voice(),
+        "rate": SPEECH_RATE,
+    }
 
 
 @app.post("/generate")

@@ -1,10 +1,37 @@
+import os
 import subprocess
 import sys
 import wave
 
+# Words per minute. The engines run near 200 on their own, which is too quick
+# to shadow: the listener falls behind and stops tracking either ear. This is a
+# dial rather than an exact figure, and each voice reads it slightly
+# differently, so 100 lands at about 114 wpm with the default voice.
+SPEECH_RATE = int(os.environ.get("SPEECH_RATE", 100))
+
+# Which espeak-ng voice to speak with, on linux. mb-us1 is the mbrola american
+# female, which is a good deal less buzzy than plain espeak but needs the
+# mbrola packages. `espeak-ng --voices` lists the alternatives.
+VOICE = os.environ.get("VOICE", "mb-us1")
+
+# Always present, so it is what we drop back to if VOICE cannot be spoken
+FALLBACK_VOICE = "en-us"
+
 
 def reverse_words(text):
     return " ".join(reversed(text.split()))
+
+
+def current_voice():
+    """What we will actually speak with, which is not always what was asked
+    for: mbrola voices need extra packages that may not be installed."""
+    if sys.platform == "darwin":
+        return "macos say"
+    listed = subprocess.run(
+        ["espeak-ng", "--voices=mbrola" if VOICE.startswith("mb-") else "--voices"],
+        capture_output=True, text=True,
+    ).stdout
+    return VOICE if f" {VOICE} " in listed or f"/{VOICE}" in listed else FALLBACK_VOICE
 
 
 def text_to_wav(text, path):
@@ -12,16 +39,26 @@ def text_to_wav(text, path):
     if sys.platform == "darwin":
         # macOS ships with the `say` command, no extra install needed
         subprocess.run(
-            ["say", "-o", path, "--file-format=WAVE", "--data-format=LEI16@22050"],
+            ["say", "-r", str(SPEECH_RATE), "-o", path,
+             "--file-format=WAVE", "--data-format=LEI16@22050"],
             input=text.encode(),
             check=True,
         )
     else:
-        import pyttsx3  # offline too: espeak on linux, sapi on windows
-
-        engine = pyttsx3.init()
-        engine.save_to_file(text, path)
-        engine.runAndWait()
+        # espeak-ng directly rather than through pyttsx3: it lets us name the
+        # voice, and the text goes in on stdin so a long pasted paragraph
+        # cannot run past the command line length limit.
+        # If the mbrola packages are missing we still want working audio, so
+        # fall back to the plain voice rather than failing the request.
+        for voice in (VOICE, FALLBACK_VOICE):
+            spoken = subprocess.run(
+                ["espeak-ng", "--stdin", "-v", voice,
+                 "-s", str(SPEECH_RATE), "-w", path],
+                input=text.encode(),
+            )
+            if spoken.returncode == 0:
+                return
+        raise RuntimeError("espeak-ng could not produce any audio")
 
 
 def read_wav(path):
