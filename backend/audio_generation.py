@@ -1,4 +1,6 @@
+import math
 import os
+import struct
 import subprocess
 import sys
 import wave
@@ -18,13 +20,22 @@ VOICE = os.environ.get("VOICE", "mb-us1")
 FALLBACK_VOICE = "en-us"
 
 
-# Silence at each end of every clip. The lead in is the important one: a
-# bluetooth headset lets its link go idle and takes a good fraction of a
-# second to wake up once sound starts, and whatever is playing during that
-# time is simply lost. espeak begins speaking within 0.01s of the start, so
-# without a run-up the opening word is what gets eaten. A second is generous
-# enough for wireless; wired listeners can safely turn it down with LEAD_IN.
-LEAD_IN_SECONDS = float(os.environ.get("LEAD_IN", 1.0))
+# Every clip opens with a short tone, then a gap, then the speech.
+#
+# The tone is not decoration. A bluetooth headset drops its link between clips
+# and sleeps straight through digital silence, so padding the front with quiet
+# never wakes it: a full second of silence made no difference, because silence
+# is exactly what it ignores. Real sound wakes it, and by the time the gap has
+# passed it is fully awake and the opening word survives. A warning tone before
+# a trial is ordinary practice in listening experiments in any case.
+#
+# Set CUE_HZ to 0 for no tone, e.g. for wired listeners.
+CUE_HZ = float(os.environ.get("CUE_HZ", 880))
+CUE_SECONDS = float(os.environ.get("CUE_SECONDS", 0.25))
+CUE_LEVEL = float(os.environ.get("CUE_LEVEL", 0.25))  # share of full volume
+
+# The gap between the tone and the first word, and the quiet after the last one
+LEAD_IN_SECONDS = float(os.environ.get("LEAD_IN", 0.5))
 TAIL_OUT_SECONDS = float(os.environ.get("TAIL_OUT", 0.5))
 
 
@@ -85,6 +96,21 @@ def text_to_wav(text, path):
         raise RuntimeError("espeak-ng could not produce any audio")
 
 
+def cue_tone(framerate, width):
+    """The waking beep, in both ears, faded at each end so it does not click."""
+    if not CUE_HZ or width != 2:  # 16 bit is all we ever produce
+        return b""
+    total = int(framerate * CUE_SECONDS)
+    fade = max(1, int(framerate * 0.02))
+    tone = bytearray()
+    for i in range(total):
+        loudness = min(1.0, i / fade, (total - i) / fade)
+        sample = int(CUE_LEVEL * 32767 * loudness
+                     * math.sin(2 * math.pi * CUE_HZ * i / framerate))
+        tone += struct.pack("<h", sample) * 2
+    return bytes(tone)
+
+
 def read_wav(path):
     with wave.open(path, "rb") as w:
         return w.getparams(), w.readframes(w.getnframes())
@@ -111,12 +137,12 @@ def make_stereo(left_path, right_path, out_path):
         frames[i::2 * width] = left[i::width]
         frames[width + i::2 * width] = right[i::width]
 
-    # a moment of quiet at each end, so the browser clips silence, not words
     quiet = lambda seconds: b"\x00" * (int(params.framerate * seconds) * width * 2)
 
     with wave.open(out_path, "wb") as out:
         out.setnchannels(2)
         out.setsampwidth(width)
         out.setframerate(params.framerate)
-        out.writeframes(quiet(LEAD_IN_SECONDS) + bytes(frames)
+        out.writeframes(cue_tone(params.framerate, width)
+                        + quiet(LEAD_IN_SECONDS) + bytes(frames)
                         + quiet(TAIL_OUT_SECONDS))
