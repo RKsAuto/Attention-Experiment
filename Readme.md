@@ -49,13 +49,20 @@ to clip the first moment of playback and a one-syllable opening word gets lost.
 
 Two environment variables, so the stimulus can be adjusted without a redeploy:
 
-- `SPEECH_RATE` — words per minute, default 100. The engines sit near 200 on
+- `SPEECH_RATE` — words per minute, default 160. The engines sit near 200 on
   their own, which is far too quick for a participant to shadow. It is a dial
   rather than an exact figure and each voice reads it a little differently;
-  100 measures at about 114 wpm with the default voice.
+  160 measures at about 96 wpm with the default voice.
 - `VOICE` — an espeak-ng voice, default `mb-us1`, the mbrola american female.
   `espeak-ng --voices` and `espeak-ng --voices=mbrola` list the rest. Not used
   on macOS, which speaks through its own much nicer system voices.
+- `LEAD_IN` — seconds of silence before the speech, default 1.0. Bluetooth
+  headphones let their link go idle and take a good fraction of a second to
+  wake once sound starts, and whatever plays during that time is lost. espeak
+  starts speaking within 0.01s, so without a run-up the opening word is what
+  gets eaten. Turn it down to about 0.3 if your listeners are wired.
+- `TAIL_OUT` — seconds of silence after the speech, default 0.5, for the same
+  reason at the other end.
 
 `mb-us1` needs the `mbrola` and `mbrola-us1` packages, which is why the image
 is built on Ubuntu rather than a slim Python base: both live in Ubuntu's

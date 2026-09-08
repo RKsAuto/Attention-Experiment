@@ -18,10 +18,14 @@ VOICE = os.environ.get("VOICE", "mb-us1")
 FALLBACK_VOICE = "en-us"
 
 
-# A little silence at each end, because playback tends to clip the very start
-# and the very finish, and a one syllable word there is easily lost to it
-LEAD_IN_SECONDS = 0.3
-TAIL_OUT_SECONDS = 0.3
+# Silence at each end of every clip. The lead in is the important one: a
+# bluetooth headset lets its link go idle and takes a good fraction of a
+# second to wake up once sound starts, and whatever is playing during that
+# time is simply lost. espeak begins speaking within 0.01s of the start, so
+# without a run-up the opening word is what gets eaten. A second is generous
+# enough for wireless; wired listeners can safely turn it down with LEAD_IN.
+LEAD_IN_SECONDS = float(os.environ.get("LEAD_IN", 1.0))
+TAIL_OUT_SECONDS = float(os.environ.get("TAIL_OUT", 0.5))
 
 
 def reverse_words(text):
