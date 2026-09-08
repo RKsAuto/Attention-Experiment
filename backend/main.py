@@ -24,8 +24,11 @@ mimetypes.add_type("text/javascript", ".js")
 
 BASE_DIR = Path(__file__).parent
 AUDIO_DIR = BASE_DIR / "audio"
-FORWARD = AUDIO_DIR / "forward.wav"
-REVERSED = AUDIO_DIR / "reversed.wav"
+
+# The two text boxes on the page. Each is spoken forwards and backwards, and
+# either recording can go to either ear, which is what lets the two ears hear
+# entirely different things.
+BOXES = ("a", "b")
 
 app = FastAPI(title="Attention Experiment")
 
@@ -52,43 +55,48 @@ def health():
     }
 
 
+def clip(box, flipped):
+    return AUDIO_DIR / f"{box}_{'reversed' if flipped else 'forward'}.wav"
+
+
 @app.post("/generate")
-def generate(text: str = Body(..., embed=True)):
-    text = text.strip()
-    if not text:
+def generate(a: str = Body("", embed=True), b: str = Body("", embed=True)):
+    """Speak whichever boxes were filled in, each one both ways round."""
+    texts = {"a": a.strip(), "b": b.strip()}
+    if not any(texts.values()):
         raise HTTPException(400, "Paste some text first")
+
     AUDIO_DIR.mkdir(exist_ok=True)
-    text_to_wav(text, str(FORWARD))
-    text_to_wav(reverse_words(text), str(REVERSED))
-    return {"status": "ready"}
+    for stale in AUDIO_DIR.glob("*.wav"):
+        stale.unlink()  # so an emptied box cannot keep playing its old audio
+
+    for box, text in texts.items():
+        if text:
+            text_to_wav(text, str(clip(box, False)))
+            text_to_wav(reverse_words(text), str(clip(box, True)))
+    return {"status": "ready", "ready": [b for b, t in texts.items() if t]}
 
 
-def pick_source(flipped):
-    """Flipped ears hear the word-reversed audio, others hear the original."""
-    path = REVERSED if flipped else FORWARD
+def pick(box, flipped):
+    """The recording an ear should play, or None to leave that ear silent."""
+    if not box:
+        return None
+    if box not in BOXES:
+        raise HTTPException(400, f"There is no box called {box}")
+    path = clip(box, flipped)
     if not path.exists():
-        raise HTTPException(404, "No audio yet, hit Generate first")
+        raise HTTPException(404, f"Box {box.upper()} is empty, hit Generate first")
     return str(path)
 
 
-@app.get("/audio/left")
-def left_ear(flip: bool = False):
-    out = AUDIO_DIR / "left.wav"
-    make_stereo(pick_source(flip), None, str(out))
-    return FileResponse(out, media_type="audio/wav")
-
-
-@app.get("/audio/right")
-def right_ear(flip: bool = False):
-    out = AUDIO_DIR / "right.wav"
-    make_stereo(None, pick_source(flip), str(out))
-    return FileResponse(out, media_type="audio/wav")
-
-
-@app.get("/audio/both")
-def both_ears(flipL: bool = False, flipR: bool = False):
-    out = AUDIO_DIR / "both.wav"
-    make_stereo(pick_source(flipL), pick_source(flipR), str(out))
+@app.get("/audio")
+def audio(left: str = "", right: str = "",
+          left_flip: bool = False, right_flip: bool = False):
+    """Either box can feed either ear, so the ears can differ completely."""
+    if not left and not right:
+        raise HTTPException(400, "Pick something for at least one ear")
+    out = AUDIO_DIR / f"play_{left}{left_flip}_{right}{right_flip}.wav"
+    make_stereo(pick(left, left_flip), pick(right, right_flip), str(out))
     return FileResponse(out, media_type="audio/wav")
 
 

@@ -10,12 +10,22 @@ uvicorn main:app --reload
 
 Then open http://127.0.0.1:8000 in your browser and put your headphones on.
 
-- Paste a paragraph and hit **Generate Audios** (the speech is made offline, no API keys needed).
-- **L** plays the left ear only, **R** the right ear only, **B** plays both together.
-- The purple button pauses whatever is playing and resumes it from the same
-  spot. Its face shows what pressing it will do next.
-- Tick **flip** under an ear to make that ear hear the word-reversed version
+There are two text boxes, so the two ears can carry entirely different
+stimuli. Fill in one or both and hit **Generate Audio** (the speech is made
+offline, no API keys needed).
+
+- Each box has its own **L** and **R**: they play *that box* into that ear
+  alone, with the other ear silent. Handy for auditioning one stimulus.
+- **B** is the dichotic one: the first box goes to the left ear and the second
+  to the right, both at once.
+- Each box has its own **flip** tick, which makes that box play word-reversed
   ("I am groot" becomes "groot am I").
+- **P** pauses whatever is playing and resumes from the same spot. Its face
+  shows what pressing it will do next.
+
+For the original single-passage version of the experiment, paste the same text
+into both boxes and tick **flip** on one of them. Both takes then come out the
+same length, so the ears stay word-aligned.
 
 macOS uses the built-in `say` command, so nothing extra is needed there.
 Everywhere else it speaks through espeak-ng: `sudo apt install espeak-ng` on

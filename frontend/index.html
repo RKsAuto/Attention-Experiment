@@ -12,33 +12,42 @@
 </head>
 <body>
     <h1>Attention Experiment</h1>
-    <div class="input-group">        
-        <textarea name="textarea" id="" placeholder="Paste your text here"></textarea>
-        <button class="generate" tag="generate">Generate Audio</button>
+    <div class="stimuli">
+
+        <div class="input-group">
+            <textarea name="a" placeholder="First stimulus"></textarea>
+            <div class="box-controls">
+                <button tag="L" box="a">L</button>
+                <button tag="R" box="a">R</button>
+                <label>
+                    <input type="checkbox" name="flipA"> flip
+                </label>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <textarea name="b" placeholder="Second stimulus"></textarea>
+            <div class="box-controls">
+                <button tag="L" box="b">L</button>
+                <button tag="R" box="b">R</button>
+                <label>
+                    <input type="checkbox" name="flipB"> flip
+                </label>
+            </div>
+        </div>
+
     </div>
+
+    <button class="generate" tag="generate">Generate Audio</button>
+
     <div class="arrangement">
-    <div class="control-group">
-        <button tag="L">L</button>
-        <label>
-            <input type="checkbox" name="flipL"> flip
-        </label>
-    </div>
-
-    <div class="control-group">
-        <button tag="R">R</button>
-        <label>
-            <input type="checkbox" name="flipR"> flip
-        </label>
-    </div>
-
-    <div class="control-group">
-        <button tag="B">B</button>
+        <div class="control-group">
+            <button tag="B">B</button>
         </div>
-
-    <div class="control-group">
-        <button tag="P">P</button>
+        <div class="control-group">
+            <button tag="P">P</button>
         </div>
-</div>
+    </div>
 
 
 </body>
