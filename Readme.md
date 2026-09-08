@@ -56,13 +56,21 @@ Two environment variables, so the stimulus can be adjusted without a redeploy:
 - `VOICE` — an espeak-ng voice, default `mb-us1`, the mbrola american female.
   `espeak-ng --voices` and `espeak-ng --voices=mbrola` list the rest. Not used
   on macOS, which speaks through its own much nicer system voices.
-- `LEAD_IN` — seconds of silence before the speech, default 1.0. Bluetooth
-  headphones let their link go idle and take a good fraction of a second to
-  wake once sound starts, and whatever plays during that time is lost. espeak
-  starts speaking within 0.01s, so without a run-up the opening word is what
-  gets eaten. Turn it down to about 0.3 if your listeners are wired.
-- `TAIL_OUT` — seconds of silence after the speech, default 0.5, for the same
-  reason at the other end.
+- `CUE_HZ` — pitch of the tone that opens every clip, default 880. Set it to 0
+  to drop the tone. `CUE_SECONDS` (default 0.25) and `CUE_LEVEL` (default 0.25,
+  a share of full volume) control its length and loudness.
+- `LEAD_IN` — the gap between the tone and the first word, default 0.5.
+- `TAIL_OUT` — quiet after the last word, default 0.5.
+
+### Why there is a tone
+
+A bluetooth headset drops its link between clips and sleeps straight through
+digital silence. Padding the front of a clip with quiet therefore does nothing:
+a whole second of silence changed nothing at all, because silence is precisely
+what the headset ignores, and it woke on the first word and swallowed it. A
+real sound wakes it, and after the gap it is alert by the time the speech
+begins. A warning tone ahead of a trial is normal in listening experiments
+anyway. Wired listeners do not need it: `CUE_HZ=0`.
 
 `mb-us1` needs the `mbrola` and `mbrola-us1` packages, which is why the image
 is built on Ubuntu rather than a slim Python base: both live in Ubuntu's
