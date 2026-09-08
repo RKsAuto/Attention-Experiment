@@ -64,6 +64,35 @@ textarea::placeholder {
     font-size: 1.2rem;
 }
 
+/* The two stimulus boxes, side by side while there is room for them */
+.stimuli {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;      /* they stack instead of squashing on a phone */
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 1100px;
+}
+
+.stimuli > .input-group {
+    flex: 1 1 320px;      /* share the row evenly, wrap below 320px each */
+    max-width: 520px;
+}
+
+/* each box's own L, R and flip, kept together under it */
+.box-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.box-controls button {
+    margin: 5px;          /* the usual 20px is too airy for a tight row */
+}
+
 /* 4. The Arrangement Container */
 .arrangement {
     display: flex;

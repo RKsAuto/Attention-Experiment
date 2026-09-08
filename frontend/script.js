@@ -1,8 +1,17 @@
 // wires the existing buttons to the backend
 
-const textarea = document.querySelector("textarea");
-const flipL = document.querySelector('input[name="flipL"]');
-const flipR = document.querySelector('input[name="flipR"]');
+// the two stimulus boxes, each with its own flip tick
+const boxes = {
+    a: {
+        text: document.querySelector('textarea[name="a"]'),
+        flip: document.querySelector('input[name="flipA"]'),
+    },
+    b: {
+        text: document.querySelector('textarea[name="b"]'),
+        flip: document.querySelector('input[name="flipB"]'),
+    },
+};
+
 const generateBtn = document.querySelector('button[tag="generate"]');
 const pauseBtn = document.querySelector('button[tag="P"]');
 // remember whatever the button is called, so restoring it cannot rename it
@@ -28,8 +37,21 @@ function showPauseState() {
     pauseBtn.innerHTML = player.paused ? "&#9654;" : "&#9208;";
 }
 
-async function play(url) {
-    const response = await fetch(url + "&t=" + Date.now()); // dodge the browser cache
+function startPlaying() {
+    // play() hands back a promise. Swapping clips quickly rejects it with
+    // AbortError, which is harmless, but a browser refusing to play at all
+    // would otherwise fail silently in the middle of a session.
+    player.play().catch((err) => {
+        if (err.name !== "AbortError") {
+            showToast("The browser blocked playback, click the page and retry");
+        }
+    });
+}
+
+// which box feeds which ear, e.g. {left: "a", right: "b"}
+async function play(ears) {
+    const query = new URLSearchParams({ ...ears, t: Date.now() });
+    const response = await fetch("/audio?" + query); // t dodges the cache
     if (!response.ok) {
         showToast((await response.json()).detail);
         return;
@@ -40,7 +62,7 @@ async function play(url) {
     for (const event of ["play", "pause", "ended"]) {
         player.addEventListener(event, showPauseState);
     }
-    player.play();
+    startPlaying();
 }
 
 generateBtn.addEventListener("click", async () => {
@@ -49,10 +71,14 @@ generateBtn.addEventListener("click", async () => {
         const response = await fetch("/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: textarea.value }),
+            body: JSON.stringify({
+                a: boxes.a.text.value,
+                b: boxes.b.text.value,
+            }),
         });
         if (response.ok) {
-            showToast("Audios ready! Use L / R / B to play");
+            const ready = (await response.json()).ready.join(" and ").toUpperCase();
+            showToast(`Box ${ready} ready! Use L / R / B to play`);
         } else {
             showToast((await response.json()).detail);
         }
@@ -62,16 +88,21 @@ generateBtn.addEventListener("click", async () => {
     generateBtn.textContent = generateLabel;
 });
 
-document.querySelector('button[tag="L"]').addEventListener("click", () => {
-    play("/audio/left?flip=" + flipL.checked);
-});
+// each box's own L and R send just that box to just that ear
+for (const button of document.querySelectorAll("button[box]")) {
+    button.addEventListener("click", () => {
+        const box = button.getAttribute("box");
+        const ear = button.getAttribute("tag") === "L" ? "left" : "right";
+        play({ [ear]: box, [ear + "_flip"]: boxes[box].flip.checked });
+    });
+}
 
-document.querySelector('button[tag="R"]').addEventListener("click", () => {
-    play("/audio/right?flip=" + flipR.checked);
-});
-
+// B is the dichotic one: first box in the left ear, second in the right
 document.querySelector('button[tag="B"]').addEventListener("click", () => {
-    play("/audio/both?flipL=" + flipL.checked + "&flipR=" + flipR.checked);
+    play({
+        left: "a", left_flip: boxes.a.flip.checked,
+        right: "b", right_flip: boxes.b.flip.checked,
+    });
 });
 
 pauseBtn.addEventListener("click", () => {
@@ -80,7 +111,7 @@ pauseBtn.addEventListener("click", () => {
         return;
     }
     if (player.paused) {
-        player.play();
+        startPlaying();
     } else {
         player.pause();
     }
